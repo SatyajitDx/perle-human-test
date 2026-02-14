@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Perle Labs Human Test</title>
+
+<style>
+body{
+  font-family: Arial;
+  text-align:center;
+  background:#111;
+  color:white;
+}
+
+img{
+  width:300px;
+  border-radius:10px;
+  margin-top:20px;
+}
+
+button{
+  margin:10px;
+  padding:8px 20px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+button:hover{
+  opacity:0.8;
+}
+
+#result{
+  font-weight:bold;
+  margin-top:10px;
+  font-size:18px;
+}
+
+#score{
+  margin-top:20px;
+  font-size:18px;
+}
+
+#finalResult{
+  margin-top:20px;
+  text-align:left;
+  max-width:500px;
+  margin-left:auto;
+  margin-right:auto;
+}
+</style>
+</head>
+<body>
+
+<h1>Perle Labs Human Test 🧠</h1>
+<p>Is this image Real or AI?</p>
+
+<img id="quizImage" src="img1.jpg">
+
+<br>
+
+<button onclick="answer('real')">Real</button>
+<button onclick="answer('ai')">AI</button>
+
+<div id="result"></div>
+<div id="score">Score: 0 / 5</div>
+<div id="finalResult"></div>
+
+<script>
+
+let images = [
+  {src:"img1.jpg", correct:"ai"},
+  {src:"img2.jpg", correct:"ai"},
+  {src:"img3.jpg", correct:"real"},
+  {src:"img4.jpg", correct:"ai"},
+  {src:"img5.jpg", correct:"real"}
+];
+
+let current = 0;
+let score = 0;
+let answers = [];
+
+function answer(choice){
+
+  if(current >= images.length) return;
+
+  let correctAnswer = images[current].correct;
+  let resultText = "";
+
+  if(choice === correctAnswer){
+    score++;
+    resultText="Correct ✅";
+    document.getElementById("result").style.color="lightgreen";
+  }else{
+    resultText="Wrong ❌ (Correct: " + correctAnswer.toUpperCase() + ")";
+    document.getElementById("result").style.color="red";
+  }
+
+  document.getElementById("result").innerText=resultText;
+
+  answers.push({
+    image: current+1,
+    yourAnswer: choice,
+    correctAnswer: correctAnswer
+  });
+
+  current++;
+
+  if(current < images.length){
+    setTimeout(()=>{
+      document.getElementById("quizImage").src = images[current].src;
+      document.getElementById("result").innerText="";
+      document.getElementById("score").innerText =
+        "Score: " + score + " / " + images.length;
+    },1000);
+  }else{
+    setTimeout(()=>{
+      showFinalResult();
+    },1000);
+  }
+}
+
+function showFinalResult(){
+
+  document.getElementById("quizImage").style.display="none";
+  document.querySelectorAll("button").forEach(btn => btn.style.display="none");
+
+  let percent = Math.round((score/images.length)*100);
+
+  let summary = "<h2>Test Finished 🎉</h2>";
+  summary += "<p>Your Score: " + score + "/" + images.length + " (" + percent + "%)</p><hr>";
+
+  answers.forEach(a=>{
+    summary += "Image " + a.image +
+      " → Your Answer: " + a.yourAnswer.toUpperCase() +
+      " | Correct: " + a.correctAnswer.toUpperCase() + "<br>";
+  });
+
+  document.getElementById("finalResult").innerHTML = summary;
+  document.getElementById("score").innerText="";
+}
+
+</script>
+
+</body>
+</html>
