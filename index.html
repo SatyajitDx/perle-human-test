@@ -6,64 +6,206 @@
 
 <style>
 body{
-  font-family: Arial;
-  text-align:center;
-  background:#111;
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#0f172a,#020617);
   color:white;
 }
 
-img{
-  width:300px;
-  border-radius:10px;
-  margin-top:20px;
+/* HEADER CENTERED */
+.header{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  padding:30px 0;
+  font-size:30px;
+  font-weight:700;
 }
 
-button{
-  margin:10px;
-  padding:8px 20px;
+.header img{
+  width:45px;
+}
+
+/* MAIN LAYOUT */
+.container{
+  display:flex;
+  min-height:70vh;
+  padding:20px 60px;
+}
+
+.left{
+  flex:2;
+  text-align:center;
+}
+
+.right{
+  flex:1;
+  padding-left:40px;
+}
+
+/* QUESTION TEXT */
+.questionText{
+  font-size:18px;
+  color:#cbd5e1;
+}
+
+/* IMAGE */
+img.quiz{
+  width:350px;
+  border-radius:15px;
+  margin-top:20px;
+  box-shadow:0 0 25px rgba(37,99,235,0.3);
+}
+
+/* OPTIONS */
+.option{
+  padding:10px 20px;
+  margin:8px;
   border:none;
-  border-radius:5px;
+  border-radius:8px;
   cursor:pointer;
+  background:#1e293b;
+  color:white;
+  transition:0.3s;
 }
 
-button:hover{
-  opacity:0.8;
+.option.selected{
+  background:#2563eb;
 }
 
-#result{
+/* SUBMIT */
+.submitBtn{
+  margin-top:15px;
+  padding:10px 25px;
+  border:none;
+  border-radius:8px;
+  background:#22c55e;
+  cursor:pointer;
   font-weight:bold;
-  margin-top:10px;
-  font-size:18px;
 }
 
-#score{
-  margin-top:20px;
-  font-size:18px;
+/* TIMER BOX */
+.timerBox{
+  background:#111827;
+  padding:20px;
+  border-radius:12px;
+  text-align:center;
+  box-shadow:0 0 20px rgba(37,99,235,0.2);
 }
 
-#finalResult{
+.timer{
+  font-size:48px;
+  font-weight:bold;
+  color:#22d3ee;
+}
+
+/* QUESTION LIST */
+.questionBox{
+  background:#111827;
+  margin-top:25px;
+  padding:20px;
+  border-radius:12px;
+}
+
+.qItem{
+  padding:8px;
+  margin:6px 0;
+  border-radius:6px;
+  background:#1e293b;
+}
+
+.active{
+  background:#2563eb;
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  0%{opacity:1;}
+  50%{opacity:0.6;}
+  100%{opacity:1;}
+}
+
+/* RESULT */
+.resultContainer{
+  display:flex;
+  justify-content:center;
+  margin-top:60px;
+}
+
+.resultCard{
+  background:#111827;
+  padding:35px;
+  border-radius:15px;
+  text-align:center;
+  width:400px;
+  box-shadow:0 0 25px rgba(37,99,235,0.3);
+}
+
+.rankBadge{
+  margin-top:15px;
+  padding:8px 15px;
+  border-radius:20px;
+  display:inline-block;
+  background:#2563eb;
+}
+
+.creator{
   margin-top:20px;
-  text-align:left;
-  max-width:500px;
-  margin-left:auto;
-  margin-right:auto;
+}
+
+.creator img{
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  object-fit:cover;
 }
 </style>
 </head>
+
 <body>
 
-<h1>Perle Labs Human Test 🧠</h1>
-<p>Is this image Real or AI?</p>
+<div class="header">
+  <img src="logo.png">
+  Perle Labs Human Test 🧠
+</div>
 
-<img id="quizImage" src="img1.jpg">
+<div class="container" id="quizContainer">
 
-<br>
+<div class="left">
 
-<button onclick="answer('real')">Real</button>
-<button onclick="answer('ai')">AI</button>
+  <div class="questionText">Is this image Real or AI?</div>
 
-<div id="result"></div>
-<div id="score">Score: 0 / 5</div>
+  <img id="quizImage" src="img1.jpg" class="quiz">
+
+  <div>
+    <button class="option" onclick="selectAnswer('real', this)">Real</button>
+    <button class="option" onclick="selectAnswer('ai', this)">AI</button>
+  </div>
+
+  <button class="submitBtn" onclick="submitAnswer()">Submit</button>
+
+</div>
+
+<div class="right">
+
+  <div class="timerBox">
+    <div class="timer" id="timer">15</div>
+    <div>Seconds Remaining</div>
+  </div>
+
+  <div class="questionBox" id="questionList">
+    <div class="qItem active">Question 1</div>
+    <div class="qItem">Question 2</div>
+    <div class="qItem">Question 3</div>
+    <div class="qItem">Question 4</div>
+    <div class="qItem">Question 5</div>
+  </div>
+
+</div>
+
+</div>
+
 <div id="finalResult"></div>
 
 <script>
@@ -78,67 +220,91 @@ let images = [
 
 let current = 0;
 let score = 0;
-let answers = [];
+let selectedAnswer = null;
+let timeLeft = 15;
+let timerInterval;
 
-function answer(choice){
+function startTimer(){
+  timeLeft = 15;
+  document.getElementById("timer").innerText = timeLeft;
 
-  if(current >= images.length) return;
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    document.getElementById("timer").innerText = timeLeft;
 
-  let correctAnswer = images[current].correct;
-  let resultText = "";
+    if(timeLeft <= 0){
+      clearInterval(timerInterval);
+      submitAnswer();
+    }
+  },1000);
+}
 
-  if(choice === correctAnswer){
+function updateQuestionList(){
+  let items = document.querySelectorAll(".qItem");
+  items.forEach(item=>item.classList.remove("active"));
+  if(current < items.length){
+    items[current].classList.add("active");
+  }
+}
+
+function selectAnswer(answer, element){
+  selectedAnswer = answer;
+  document.querySelectorAll(".option").forEach(btn => btn.classList.remove("selected"));
+  element.classList.add("selected");
+}
+
+function submitAnswer(){
+
+  clearInterval(timerInterval);
+
+  if(selectedAnswer === images[current].correct){
     score++;
-    resultText="Correct ✅";
-    document.getElementById("result").style.color="lightgreen";
-  }else{
-    resultText="Wrong ❌ (Correct: " + correctAnswer.toUpperCase() + ")";
-    document.getElementById("result").style.color="red";
   }
 
-  document.getElementById("result").innerText=resultText;
-
-  answers.push({
-    image: current+1,
-    yourAnswer: choice,
-    correctAnswer: correctAnswer
-  });
+  selectedAnswer = null;
+  document.querySelectorAll(".option").forEach(btn => btn.classList.remove("selected"));
 
   current++;
 
   if(current < images.length){
-    setTimeout(()=>{
-      document.getElementById("quizImage").src = images[current].src;
-      document.getElementById("result").innerText="";
-      document.getElementById("score").innerText =
-        "Score: " + score + " / " + images.length;
-    },1000);
+    document.getElementById("quizImage").src = images[current].src;
+    updateQuestionList();
+    startTimer();
   }else{
-    setTimeout(()=>{
-      showFinalResult();
-    },1000);
+    showFinalResult();
   }
 }
 
 function showFinalResult(){
 
-  document.getElementById("quizImage").style.display="none";
-  document.querySelectorAll("button").forEach(btn => btn.style.display="none");
+  document.getElementById("quizContainer").style.display="none";
 
   let percent = Math.round((score/images.length)*100);
 
-  let summary = "<h2>Test Finished 🎉</h2>";
-  summary += "<p>Your Score: " + score + "/" + images.length + " (" + percent + "%)</p><hr>";
+  let rank="";
+  if(percent>=90){ rank="AI Detector 🧠"; }
+  else if(percent>=70){ rank="Sharp Observer 👀"; }
+  else if(percent>=50){ rank="Getting There 👍"; }
+  else{ rank="AI Fooled You 🤖"; }
 
-  answers.forEach(a=>{
-    summary += "Image " + a.image +
-      " → Your Answer: " + a.yourAnswer.toUpperCase() +
-      " | Correct: " + a.correctAnswer.toUpperCase() + "<br>";
-  });
+  document.getElementById("finalResult").innerHTML = `
+  <div class="resultContainer">
+    <div class="resultCard">
+      <h2>Quiz Completed 🎉</h2>
+      <h3>Score: ${score}/5</h3>
+      <h3>Accuracy: ${percent}%</h3>
+      <div class="rankBadge">${rank}</div>
 
-  document.getElementById("finalResult").innerHTML = summary;
-  document.getElementById("score").innerText="";
+      <div class="creator">
+        <p>Created by SatyajitDx</p>
+        <img src="me.jpg">
+      </div>
+    </div>
+  </div>
+  `;
 }
+
+startTimer();
 
 </script>
 
